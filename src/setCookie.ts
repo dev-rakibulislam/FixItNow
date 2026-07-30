@@ -8,11 +8,11 @@ export type JwtOptionsPayload = {
 
 export const setCookie = (
   res: Response,
-  name: string,
+  value: string,
   accessToken: string,
   options: JwtOptionsPayload,
 ) => {
-  res.cookie(name, accessToken, {
+  res.cookie(value, accessToken, {
     httpOnly: options.httpOnly,
     maxAge: 1000 * 60 * 60 * (options.maxAge || 1),
     secure: options.secure,

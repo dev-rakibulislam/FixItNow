@@ -3,6 +3,9 @@ import { ZodError } from "zod";
 import handleZodError from "./handleZodError";
 import { sendResponse } from "../utils/sendResponse";
 import AppError from "./AppError";
+import { handlePrismaError } from "./handlePrismaError";
+import { PrismaClientKnownRequestError, PrismaClientValidationError } from "@prisma/client/runtime/client";
+import config from "../config";
 
 const globalErrorHandler = (
   error: any,
@@ -10,6 +13,7 @@ const globalErrorHandler = (
   res: Response,
   next: NextFunction,
 ) => {
+  config.node_env === "DEVELOPMENT" && console.error(error);
   if (error instanceof ZodError) {
     const { statusCode, errors, message } = handleZodError(error);
     return sendResponse(res, {
@@ -32,6 +36,23 @@ const globalErrorHandler = (
       code: error.statusCode,
       message: error.message,
       errorDetails: "Invalid JSON format",
+    });
+  }
+
+  if(error instanceof PrismaClientKnownRequestError){
+    const simplifiedError=handlePrismaError(error)
+
+    return sendResponse(res,{
+        code:simplifiedError.statusCode,
+        message:simplifiedError.message,
+        errorDetails:simplifiedError.errors
+    })
+}
+
+  if (error instanceof PrismaClientValidationError) {
+    return sendResponse(res, {
+      code: 400,
+      message: "Database validation error",
     });
   }
 

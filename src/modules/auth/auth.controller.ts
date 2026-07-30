@@ -13,12 +13,12 @@ const registerUserController = catchAsync(
     setCookie(res, "accessToken", accessToken, {
       httpOnly: true,
       maxAge: 24,
-      secure: config.node_env === "production",
+      secure: config.node_env === "PRODUCTION",
     });
 
     setCookie(res, "refreshToken", refreshToken, {
       httpOnly: true,
-      secure: config.node_env === "production",
+      secure: config.node_env === "PRODUCTION",
       maxAge: 14,
     });
 
@@ -37,12 +37,12 @@ const loginUserController = catchAsync(async (req: Request, res: Response) => {
   setCookie(res, "accessToken", accessToken, {
     httpOnly: true,
     maxAge: 24,
-    secure: config.node_env === "production",
+    secure: config.node_env === "PRODUCTION",
   });
 
   setCookie(res, "refreshToken", refreshToken, {
     httpOnly: true,
-    secure: config.node_env === "production",
+    secure: config.node_env === "PRODUCTION",
     maxAge: 14,
   });
 
@@ -53,4 +53,18 @@ const loginUserController = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-export const authController = { registerUserController, loginUserController };
+const getMeController = catchAsync(async (req: Request, res: Response) => {
+  const user = req.user;
+  const result = await authService.getMeFromDb(req.user);
+  sendResponse(res, {
+    code: 200,
+    message: "User fetched successfully",
+    data: result,
+  });
+});
+
+export const authController = {
+  registerUserController,
+  loginUserController,
+  getMeController,
+};
