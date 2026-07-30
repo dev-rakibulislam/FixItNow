@@ -9,5 +9,5 @@ router.post(
   validateData(userRegisterSchema),
   authController.registerUserController,
 );
-// router.post("/register", authController.registerUserController);
+router.post("/login", authController.loginUserController);
 export const authRouter = router;

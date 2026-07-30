@@ -13,4 +13,5 @@ app.use("/api/v1/auth", authRouter);
 // app.use("/api/v1/auth", authRouter);
 // app.use("/api/v1/auth", authRouter);
 app.use(globalErrorHandler)
+
 export default app;

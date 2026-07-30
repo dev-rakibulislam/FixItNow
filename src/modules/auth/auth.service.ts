@@ -1,20 +1,17 @@
 import bcrypt from "bcryptjs";
 import { prisma } from "../../lib/prisma";
-import { UserRegisterPayload, userRegisterSchema } from "./auth.validator";
+import { UserLoginPayload, UserRegisterPayload } from "./auth.validator";
 import config from "../../config";
 import AppError from "../../errors/AppError";
 import { generateToken } from "../../utils/jwt";
+import { existingUser } from "../../utils/checkUser";
 
 const registerUserInDb = async (payload: UserRegisterPayload) => {
-  const { firstName, lastName, email, password } = payload;
+  const { firstName, lastName, role, email, password } = payload;
 
-  const existingUser = await prisma.user.findUnique({
-    where: {
-      email,
-    },
-  });
+  const existingUserRecord = await existingUser(email);
 
-  if (existingUser) {
+  if (existingUserRecord) {
     throw new AppError(409, "User already exists with this email");
   }
 
@@ -29,6 +26,7 @@ const registerUserInDb = async (payload: UserRegisterPayload) => {
       lastName,
       email,
       password: hashedPassword,
+      role,
     },
     omit: { password: true },
   });
@@ -55,11 +53,50 @@ const registerUserInDb = async (payload: UserRegisterPayload) => {
     accessToken,
     refreshToken,
   };
-
 };
 
+const loginUserFromDb = async (payload: UserLoginPayload) => {
+  const { email, password } = payload;
+
+  const userRecord = await existingUser(email);
+
+  if (!userRecord) {
+    throw new AppError(404, "User not found");
+  }
+
+  const { password: passwordDB, ...existingUserRecord } = userRecord;
+
+  const isPasswordMatch = await bcrypt.compare(password, passwordDB);
+
+  if (!isPasswordMatch) {
+    throw new AppError(401, "Invalid credentials");
+  }
+
+  const JwtPayload = {
+    userId: existingUserRecord.id,
+    email: existingUserRecord.email,
+    role: existingUserRecord.role,
+    status: existingUserRecord.status,
+  };
+
+  const accessToken = await generateToken(JwtPayload, {
+    secret: config.jwt_access_secret,
+    expiresIn: config.jwt_access_expires_in,
+  });
+
+  const refreshToken = await generateToken(JwtPayload, {
+    secret: config.jwt_refresh_secret,
+    expiresIn: config.jwt_refresh_expires_in,
+  });
+
+  return {
+    result: existingUserRecord,
+    accessToken,
+    refreshToken,
+  };
+};
 
 export const authService = {
   registerUserInDb,
-  // signInUserFromDb
+  loginUserFromDb,
 };

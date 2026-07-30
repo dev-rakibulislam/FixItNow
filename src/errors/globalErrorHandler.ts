@@ -12,23 +12,32 @@ const globalErrorHandler = (
 ) => {
   if (error instanceof ZodError) {
     const { statusCode, errors, message } = handleZodError(error);
-    sendResponse(res, {
+    return sendResponse(res, {
       code: statusCode,
       message: message,
       errorDetails: errors,
     });
   }
+  
   if (error instanceof AppError) {
-    console.log(error)
     return sendResponse(res, {
       code: error.statusCode,
       message: error.message,
-      errorDetails: error.errorDetails,
+      errorDetails: error?.errorDetails,
     });
   }
-  
+
+  if (error.type === "entity.parse.failed") {
+    return sendResponse(res, {
+      code: error.statusCode,
+      message: error.message,
+      errorDetails: "Invalid JSON format",
+    });
+  }
+
   sendResponse(res, {
     code: 500,
+    errorDetails: error,
     message: "Something went wrong",
   });
 };

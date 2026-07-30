@@ -1,4 +1,5 @@
 import z, { email } from "zod";
+import { UserRole } from "../../../generated/prisma/enums";
 
 export const userLoginSchema = z.object({
   email: z.email({
@@ -33,8 +34,8 @@ export const userRegisterSchema = userLoginSchema.extend({
     .min(11, "Phone number must be at least 11 characters long")
     .max(14, "Phone number must be less than 14 characters long")
     .optional(),
+  role: z.enum(UserRole).optional()
 });
 
 export type UserLoginPayload = z.infer<typeof userLoginSchema>;
 export type UserRegisterPayload = z.infer<typeof userRegisterSchema>;
-
