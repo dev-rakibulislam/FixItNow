@@ -1,0 +1,14 @@
+model TechnicianProfile {
+  id                String           @id @default(uuid())
+  userId            String           @unique
+  user              User             @relation(fields: [userId], references: [id])
+  userName          String           @db.VarChar(100)
+  bio               String           @unique @db.VarChar(255)
+  hourlyRate        String           @db.VarChar(20)
+  yearsOfExperience Int              @db.Integer
+  status            TechnicianStatus @default(ACTIVE)
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  @@map("technicianProfiles")
+}
