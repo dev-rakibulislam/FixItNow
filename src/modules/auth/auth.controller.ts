@@ -3,18 +3,24 @@ import { catchAsync } from "../../utils/catchAsync";
 import { sendResponse } from "../../utils/sendResponse";
 import { authService } from "./auth.service";
 import { setCookie } from "../../setCookie";
+import config from "../../config";
 
 const registerUserController = catchAsync(
   async (req: Request, res: Response) => {
     const { result, accessToken, refreshToken } =
       await authService.registerUserInDb(req.body);
 
-    setCookie(res, "accessToken", accessToken, { httpOnly: true, maxAge: 24 });
-    setCookie(res, "refreshToken", refreshToken, { httpOnly: true, maxAge: 14 });
-
-  
-
-    // secure:process.env.NODE_ENV==="production",
+    setCookie(res, "accessToken", accessToken, {
+      httpOnly: true,
+      maxAge: 24,
+      secure: config.node_env === "production",
+    });
+    
+    setCookie(res, "refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: config.node_env === "production",
+      maxAge: 14,
+    });
 
     sendResponse(res, {
       code: 201,
