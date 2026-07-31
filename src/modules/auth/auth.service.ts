@@ -3,7 +3,7 @@ import { prisma } from "../../lib/prisma";
 import { UserLoginPayload, UserRegisterPayload } from "./auth.validator";
 import config from "../../config";
 import AppError from "../../errors/AppError";
-import { generateToken, TJwtPayload } from "../../utils/jwt";
+import { generateToken } from "../../utils/jwt";
 import { existingUser } from "../../utils/checkUser";
 
 const registerUserInDb = async (payload: UserRegisterPayload) => {
@@ -96,11 +96,11 @@ const loginUserFromDb = async (payload: UserLoginPayload) => {
   };
 };
 
-const getMeFromDb = async (payload: TJwtPayload) => {
+const getMeFromDb = async (userId: string) => {
 
   const userRecord = await prisma.user.findUnique({
     where: {
-      id: payload.id,
+      id: userId,
     },
     include: {
       technicianProfile: true,

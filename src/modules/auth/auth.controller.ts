@@ -54,8 +54,7 @@ const loginUserController = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getMeController = catchAsync(async (req: Request, res: Response) => {
-  const user = req.user;
-  const result = await authService.getMeFromDb(req.user);
+  const result = await authService.getMeFromDb(req.user.id);
   sendResponse(res, {
     code: 200,
     message: "User fetched successfully",

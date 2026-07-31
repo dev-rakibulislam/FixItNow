@@ -1,16 +1,5 @@
-import jwt, { JwtPayload, SignOptions } from "jsonwebtoken";
-
-export type TJwtPayload = JwtPayload & {
-  userId: string;
-  email: string;
-  role: string;
-  status: string;
-};
-
-type TJwtData = {
-  secret: string;
-  expiresIn: string;
-};
+import jwt, {  SignOptions } from "jsonwebtoken";
+import { TJwtData, TJwtPayload } from "../types/jwt";
 
 export const generateToken = async (payload: TJwtPayload, data: TJwtData) => {
   return jwt.sign(payload, data.secret, {
