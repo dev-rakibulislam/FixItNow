@@ -5,9 +5,21 @@ import config from "../../config";
 import AppError from "../../errors/AppError";
 import { generateToken } from "../../utils/jwt";
 import { existingUser } from "../../utils/checkUser";
+import { UserRole } from "../../../generated/prisma/enums";
 
 const registerUserInDb = async (payload: UserRegisterPayload) => {
-  const { firstName, lastName, role, email, password } = payload;
+  const {
+    email,
+    password,
+    firstName,
+    lastName,
+    phoneNumber,
+    role,
+    bio,
+    hourlyRate,
+    userName,
+    yearsOfExperience,
+  } = payload;
 
   const existingUserRecord = await existingUser(email);
 
@@ -20,15 +32,38 @@ const registerUserInDb = async (payload: UserRegisterPayload) => {
     Number(config.bcrypt_salt_rounds),
   );
 
+  const userData = {
+    email,
+    password: hashedPassword,
+    firstName,
+    lastName,
+    phoneNumber,
+    role,
+  };
+
+  if (role === UserRole.TECHNICIAN) {
+    if (!bio || !hourlyRate || yearsOfExperience === undefined) {
+      throw new AppError(
+        400,
+        "Bio, hourly rate and years of experience are required for technicians",
+      );
+    }
+    Object.assign(userData, {
+      technicianProfile: {
+        create: {
+          bio,
+          userName:userName?userName: `fixitnow-${Math.ceil(Math.random() * 1000)}-${Date.now()}`,
+          hourlyRate,
+          yearsOfExperience,
+        },
+      },
+    });
+  }
+
   const result = await prisma.user.create({
-    data: {
-      firstName,
-      lastName,
-      email,
-      password: hashedPassword,
-      role,
-    },
+    data: { ...userData },
     omit: { password: true },
+    include: { ...(userData.role === UserRole.TECHNICIAN && { technicianProfile: true }) },
   });
 
   const JwtPayload = {
@@ -97,7 +132,6 @@ const loginUserFromDb = async (payload: UserLoginPayload) => {
 };
 
 const getMeFromDb = async (userId: string) => {
-
   const userRecord = await prisma.user.findUnique({
     where: {
       id: userId,

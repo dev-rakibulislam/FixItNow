@@ -6,12 +6,12 @@ export const userLoginSchema = z.object({
     error: (i) =>
       i.input == null ? "Email is required" : "Please provide a valid email",
   }),
+
   password: z
     .string("Password is required")
     .min(6, "Password must be at least 6 characters long")
     .max(100, "Password must be less than 100 characters long"),
 });
-9;
 
 export const userRegisterSchema = userLoginSchema
   .extend({
@@ -36,6 +36,7 @@ export const userRegisterSchema = userLoginSchema
       .max(14, "Phone number must be less than 14 characters long")
       .optional(),
     role: z.enum(UserRole),
+    userName: z.string().min(3).max(100).optional(),
 
     bio: z
       .string()
@@ -67,6 +68,14 @@ export const userRegisterSchema = userLoginSchema
         });
       }
 
+      if (data.phoneNumber === undefined) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["phoneNumber"],
+          message: "Phone number is required",
+        });
+      }
+      
       if (data.hourlyRate === undefined) {
         ctx.addIssue({
           code: "custom",
